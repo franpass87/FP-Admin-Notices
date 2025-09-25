@@ -88,11 +88,16 @@ if ( ! class_exists( 'FP_Admin_Notices' ) ) {
                 return;
             }
 
+            $title = sprintf(
+                '<span class="ab-icon dashicons dashicons-megaphone" aria-hidden="true"></span><span class="ab-label">%s</span><span class="fp-admin-notices-count" aria-hidden="true"></span>',
+                esc_html__( 'Notifiche', 'fp-admin-notices' )
+            );
+
             $admin_bar->add_node(
                 array(
                     'id'     => 'fp-admin-notices-toggle',
                     'parent' => 'top-secondary',
-                    'title'  => '<span class="ab-icon dashicons dashicons-megaphone" aria-hidden="true"></span><span class="ab-label">' . esc_html__( 'Notifiche', 'fp-admin-notices' ) . '</span><span class="fp-admin-notices-count" aria-hidden="true"></span>',
+                    'title'  => $title,
                     'href'   => '#',
                     'meta'   => array(
                         'title' => esc_attr__( 'Apri il pannello delle notifiche', 'fp-admin-notices' ),
@@ -110,7 +115,7 @@ if ( ! class_exists( 'FP_Admin_Notices' ) ) {
                 return;
             }
             ?>
-            <div id="fp-admin-notices-panel" class="fp-admin-notices-panel" aria-hidden="true" role="dialog" aria-labelledby="fp-admin-notices-title">
+            <div id="fp-admin-notices-panel" class="fp-admin-notices-panel" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="fp-admin-notices-title">
                 <div class="fp-admin-notices-panel__overlay" tabindex="-1"></div>
                 <div class="fp-admin-notices-panel__content" role="document">
                     <header class="fp-admin-notices-panel__header">

@@ -59,6 +59,14 @@
         node.setAttribute('data-fp-admin-notices', 'hidden');
     }
 
+    function formatAriaLabel(baseLabel, count) {
+        if (!baseLabel) {
+            return '';
+        }
+
+        return count > 0 ? baseLabel + ' (' + count + ')' : baseLabel;
+    }
+
     function updateCount(toggle, count) {
         if (!toggle) {
             return;
@@ -73,10 +81,15 @@
             badge.classList.toggle('has-items', count > 0);
         }
 
+        toggle.dataset.fpAdminNoticesCount = String(count);
+
         if (anchor) {
-            var ariaLabel = count > 0 ? label + ' (' + count + ')' : label;
-            anchor.setAttribute('aria-label', ariaLabel);
-            anchor.setAttribute('aria-expanded', anchor.classList.contains('is-active') ? 'true' : 'false');
+            var isActive = anchor.classList.contains('is-active');
+            var baseLabel = isActive
+                ? (i18n.closePanel || label)
+                : (i18n.openPanel || label);
+            anchor.setAttribute('aria-label', formatAriaLabel(baseLabel, count));
+            anchor.setAttribute('aria-expanded', isActive ? 'true' : 'false');
         }
     }
 
@@ -106,7 +119,9 @@
         updateCount(toggle, notices.length);
     }
 
-    function openPanel(panel, toggle, previouslyFocused) {
+    var lastFocusedElement = null;
+
+    function openPanel(panel, toggle) {
         if (!panel) {
             return;
         }
@@ -119,15 +134,17 @@
             if (anchor) {
                 anchor.classList.add('is-active');
                 anchor.setAttribute('aria-expanded', 'true');
+                var count = Number(toggle.dataset.fpAdminNoticesCount || '0');
+                var label = i18n.closePanel || i18n.title || 'Notifiche';
+                anchor.setAttribute('aria-label', formatAriaLabel(label, count));
             }
         }
 
+        lastFocusedElement = document.activeElement;
         var focusTarget = qs('.fp-admin-notices-panel__body', panel);
         if (focusTarget) {
             focusTarget.focus({ preventScroll: true });
         }
-
-        panel.dataset.fpAdminNoticesLastFocus = previouslyFocused ? previouslyFocused.id || 'custom-focus' : '';
     }
 
     function closePanel(panel, toggle) {
@@ -138,14 +155,24 @@
         panel.classList.remove('is-open');
         panel.setAttribute('aria-hidden', 'true');
 
-        if (toggle) {
-            var anchor = qs('a', toggle);
-            if (anchor) {
-                anchor.classList.remove('is-active');
-                anchor.setAttribute('aria-expanded', 'false');
-                anchor.focus({ preventScroll: true });
-            }
+        var anchor = toggle ? qs('a', toggle) : null;
+        if (anchor) {
+            anchor.classList.remove('is-active');
+            anchor.setAttribute('aria-expanded', 'false');
+            var count = Number(toggle ? toggle.dataset.fpAdminNoticesCount || '0' : '0');
+            var label = i18n.openPanel || i18n.title || 'Notifiche';
+            anchor.setAttribute('aria-label', formatAriaLabel(label, count));
         }
+
+        var focusTarget = lastFocusedElement && document.body.contains(lastFocusedElement)
+            ? lastFocusedElement
+            : anchor;
+
+        if (focusTarget) {
+            focusTarget.focus({ preventScroll: true });
+        }
+
+        lastFocusedElement = null;
     }
 
     function setupMutationObserver(panel, toggle) {
@@ -184,6 +211,14 @@
 
         var overlay = qs('.fp-admin-notices-panel__overlay', panel);
         var closeButton = qs('.fp-admin-notices-panel__close', panel);
+        var toggleAnchor = qs('a', toggle);
+
+        if (toggleAnchor) {
+            toggleAnchor.setAttribute('role', 'button');
+            toggleAnchor.setAttribute('aria-expanded', 'false');
+            toggleAnchor.setAttribute('aria-controls', panel.id);
+            toggleAnchor.setAttribute('aria-label', i18n.openPanel || i18n.title || 'Notifiche');
+        }
 
         function togglePanel(event) {
             event.preventDefault();
@@ -191,14 +226,13 @@
             if (isOpen) {
                 closePanel(panel, toggle);
             } else {
-                var activeElement = document.activeElement;
-                openPanel(panel, toggle, activeElement);
+                openPanel(panel, toggle);
             }
         }
 
-        if (toggle) {
-            toggle.addEventListener('click', togglePanel);
-            toggle.addEventListener('keydown', function (event) {
+        if (toggleAnchor) {
+            toggleAnchor.addEventListener('click', togglePanel);
+            toggleAnchor.addEventListener('keydown', function (event) {
                 if (event.key === 'Enter' || event.key === ' ') {
                     togglePanel(event);
                 }
