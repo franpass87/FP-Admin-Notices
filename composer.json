@@ -1,0 +1,11 @@
+{
+    "name": "fp/admin-notices",
+    "description": "Admin notices panel plugin",
+    "type": "wordpress-plugin",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "FP\\\\AdminNotices\\\\": "src/"
+        }
+    }
+}
